@@ -2,6 +2,7 @@ from __future__ import print_function
 import argparse
 import datetime
 import random
+import sys
 
 
 def parse_timestamp(ts):
@@ -26,12 +27,12 @@ def bulk_msg(ts, measurements, values, **tags):
         lines.append("+{0}".format(val))
     return '\r\n'.join(lines) + '\r\n'
 
-def generate_rows(ts, measurements, delta, **tags):
+def generate_rows(ts, delta, measurements, **tags):
     row = [0.0] * len(measurements)
 
     while True:
         for i in xrange(0, len(measurements)):
-            row[i] += random.normal(0.0, 0.01, 0.01)
+            row[i] += random.gauss(0.0, 0.01)
             msg = bulk_msg(ts, measurements, row, **tags)
             yield ts, msg
             ts += delta
@@ -61,7 +62,7 @@ def main(idrange, timerange):
 
     tag_combinations = {
         'region': ['NW', 'NE', 'Europe'],
-        'OS': ['Ubuntu 16.04', 'Ubuntu 14.04']
+        'OS': ['Ubuntu 16.04', 'Ubuntu 14.04'],
         'instance-type': ['m3.large', 'm3.xlarge', 'm3.2xlarge', 'm4.large', 'm4.xlarge', 'm4.2xlarge']
     }
 
@@ -71,15 +72,15 @@ def main(idrange, timerange):
     for host in list_hosts:
         tagline = {'host': host}
         for k, v in tag_combinations.iteritems():
-            tagline[k] = random.chose(v)
-        tags.append(tags)
+            tagline[k] = random.choice(v)
+        tags.append(tagline)
 
     lambdas = [lambda: generate_rows(begin, delta, measurements, **t) for t in tags]
 
     for ts, msg in generate_rr(lambdas):
         if ts > end:
             break
-        print(msg)
+        sys.stdout.write(msg)
 
 
 if __name__ == '__main__':
@@ -92,4 +93,4 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    main((args.rbegin, args.rend), (parse_timestamp(args.tbegin), parse_timestamp(args.tend), parse_timedelta(args.tdelta)))
+    main((int(args.rbegin), int(args.rend)), (parse_timestamp(args.tbegin), parse_timestamp(args.tend), parse_timedelta(args.tdelta)))
