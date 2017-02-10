@@ -27,13 +27,15 @@ def bulk_msg(ts, measurements, values, **tags):
         lines.append("+{0}".format(val))
     return '\r\n'.join(lines) + '\r\n'
 
-def generate_rows(ts, delta, measurements, **tags):
-    row = [0.0] * len(measurements)
+def generate_rows(ts, delta, measurements, types, **tags):
+    row = [10.0] * len(measurements)
+    out = list(row)
 
     while True:
         for i in xrange(0, len(measurements)):
             row[i] += random.gauss(0.0, 0.01)
-        msg = bulk_msg(ts, measurements, row, **tags)
+            out[i] = row[i] if types[i] == 0 else int(row[i])
+        msg = bulk_msg(ts, measurements, out, **tags)
         yield ts, msg
         ts += delta
 
@@ -53,7 +55,12 @@ def main(idrange, timerange):
     measurements = [
         'cpu.user', 'cpu.sys', 'cpu.real', 'idle', 'mem.commit',
         'mem.virt', 'iops', 'tcp.packets.in', 'tcp.packets.out',
-        'tcp.ret', 'pg.mem', 'pg.ncon'
+        'tcp.ret',
+    ]
+
+    # measurement types, 0 - float, 1 - int
+    types = [
+        0, 0, 0, 0, 1, 1, 1, 1, 1, 0
     ]
 
     tag_combinations = {
@@ -74,7 +81,7 @@ def main(idrange, timerange):
             tagline[k] = random.choice(v)
         tags.append(tagline)
 
-    lambdas = [generate_rows(begin, delta, measurements, **t) for t in tags]
+    lambdas = [generate_rows(begin, delta, measurements, types, **t) for t in tags]
 
     for ts, msg in generate_rr(lambdas):
         if ts > end:
