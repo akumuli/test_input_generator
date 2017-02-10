@@ -33,23 +33,19 @@ def generate_rows(ts, delta, measurements, **tags):
     while True:
         for i in xrange(0, len(measurements)):
             row[i] += random.gauss(0.0, 0.01)
-            msg = bulk_msg(ts, measurements, row, **tags)
-            yield ts, msg
-            ts += delta
+        msg = bulk_msg(ts, measurements, row, **tags)
+        yield ts, msg
+        ts += delta
 
-def generate_rr(list_fn):
-    N = len(list_fn)
-    iters = [fn() for fn in list_fn]
+def generate_rr(iters):
+    N = len(iters)
     ix = 0
     while True:
         it = iters[ix % N]
         yield it.next()
         ix += 1
 
-
 def main(idrange, timerange):
-    print("Ids  - [{0}, {1}]".format(*idrange))
-    print("Time - [{0}, {1}, {2}]".format(*timerange))
 
     begin, end, delta = timerange
     idbegin, idend = idrange
@@ -61,9 +57,12 @@ def main(idrange, timerange):
     ]
 
     tag_combinations = {
-        'region': ['NW', 'NE', 'Europe'],
-        'OS': ['Ubuntu 16.04', 'Ubuntu 14.04'],
-        'instance-type': ['m3.large', 'm3.xlarge', 'm3.2xlarge', 'm4.large', 'm4.xlarge', 'm4.2xlarge']
+        'region': ['ap-southeast-1', 'us-east-1', 'eu-central-1'],
+        'OS': ['Ubuntu_16.04', 'Ubuntu_14.04'],
+        'instance-type': ['m3.large', 'm3.xlarge', 'm3.2xlarge', 'm4.large', 'm4.xlarge', 'm4.2xlarge'],
+        'arch': ['x64'],
+        'team': ['NY', 'NJ'],
+        'rack': range(1, 100),
     }
 
     list_hosts = ['host_{0}'.format(id) for id in range(idbegin, idend)]
@@ -75,7 +74,7 @@ def main(idrange, timerange):
             tagline[k] = random.choice(v)
         tags.append(tagline)
 
-    lambdas = [lambda: generate_rows(begin, delta, measurements, **t) for t in tags]
+    lambdas = [generate_rows(begin, delta, measurements, **t) for t in tags]
 
     for ts, msg in generate_rr(lambdas):
         if ts > end:
