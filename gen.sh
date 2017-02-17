@@ -43,3 +43,8 @@ python2.7 main.py --rbegin=3000 --rend=3100 --tbegin=20170101T000000 --tend=2017
 python2.7 main.py --rbegin=3100 --rend=3200 --tbegin=20170101T000000 --tend=20170102T000000 --tdelta=00:00:01 | gzip > 1day_1000names_1sec_step_32.gz &
 
 wait
+
+python2.7 main.py --rbegin=3200 --rend=3300 --tbegin=20170101T000000 --tend=20170102T000000 --tdelta=00:00:01 | gzip > 1day_1000names_1sec_step_33.gz &
+python2.7 main.py --rbegin=3300 --rend=3400 --tbegin=20170101T000000 --tend=20170102T000000 --tdelta=00:00:01 | gzip > 1day_1000names_1sec_step_34.gz &
+python2.7 main.py --rbegin=3400 --rend=3500 --tbegin=20170101T000000 --tend=20170102T000000 --tdelta=00:00:01 | gzip > 1day_1000names_1sec_step_35.gz &
+python2.7 main.py --rbegin=3500 --rend=3600 --tbegin=20170101T000000 --tend=20170102T000000 --tdelta=00:00:01 | gzip > 1day_1000names_1sec_step_36.gz &
