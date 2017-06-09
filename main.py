@@ -18,13 +18,12 @@ def parse_timedelta(delta):
 
 def bulk_msg(ts, measurements, values, **tags):
     ncol = len(measurements)
-    metric = "|".join(measurements)
-    sname = "+" + metric + ' ' + ' '.join(['{0}={1}'.format(key, val) for key, val in tags.iteritems()])
-    timestr = ts.strftime('+%Y%m%dT%H%M%S.%f')
-    header = "*{0}".format(ncol)
-    lines = [sname, timestr, header]
-    for val in values:
-        lines.append("+{0}".format(val))
+    lines = []
+    for i in range(0, ncol):
+        metric = measurements[i]
+        lines.append("+" + metric + ' ' + ' '.join(['{0}={1}'.format(key, val) for key, val in tags.iteritems()]))
+        lines.append(ts.strftime('+%Y%m%dT%H%M%S.%f'))
+        lines.append("+{0}".format(values[i]))
     return '\r\n'.join(lines) + '\r\n'
 
 def generate_rows(ts, delta, measurements, types, **tags):
