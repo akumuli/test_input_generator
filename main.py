@@ -27,7 +27,20 @@ def bulk_msg(ts, measurements, values, **tags):
         lines.append("+{0}".format(val))
     return '\r\n'.join(lines) + '\r\n'
 
-def generate_rows(ts, delta, measurements, types, msg_fn, **tags):
+def open_tsdb_msg(ts, measurements, values, **tags):
+    ncol = len(measurements)
+    lines = []
+    for i in range(0, ncol):
+        metric = measurements[i]
+        line = "put "
+        line += metric
+        line += ts.strftime(' %s ')
+        line += "{0} ".format(values[i])
+        line += ' '.join(['{0}={1}'.format(key, val) for key, val in tags.iteritems()])
+        lines.append(line)
+    return '\n'.join(lines) + '\n'
+
+def generate_rows(ts, delta, measurements, types, **tags):
     row = [10.0] * len(measurements)
     out = list(row)
 
@@ -36,6 +49,7 @@ def generate_rows(ts, delta, measurements, types, msg_fn, **tags):
             row[i] += random.gauss(0.0, 0.01)
             out[i] = row[i] if types[i] == 0 else int(row[i])
         msg = msg_fn(ts, measurements, out, **tags)
+        msg = open_tsdb_msg(ts, measurements, out, **tags)
         yield ts, msg
         ts += delta
 

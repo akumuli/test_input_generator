@@ -43,3 +43,5 @@ time cat 1day_1000names_1sec_step_30.gz | gunzip > /dev/tcp/${TARGET_HOST}/8282 
 time cat 1day_1000names_1sec_step_31.gz | gunzip > /dev/tcp/${TARGET_HOST}/8282 &
 time cat 1day_1000names_1sec_step_32.gz | gunzip > /dev/tcp/${TARGET_HOST}/8282 &
 time cat 1day_1000names_1sec_step_36.gz | gunzip > /dev/tcp/${TARGET_HOST}/8282 &
+
+wait
