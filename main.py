@@ -27,7 +27,7 @@ def bulk_msg(ts, measurements, values, **tags):
         lines.append("+{0}".format(val))
     return '\r\n'.join(lines) + '\r\n'
 
-def generate_rows(ts, delta, measurements, types, **tags):
+def generate_rows(ts, delta, measurements, types, msg_fn, **tags):
     row = [10.0] * len(measurements)
     out = list(row)
 
@@ -35,7 +35,7 @@ def generate_rows(ts, delta, measurements, types, **tags):
         for i in xrange(0, len(measurements)):
             row[i] += random.gauss(0.0, 0.01)
             out[i] = row[i] if types[i] == 0 else int(row[i])
-        msg = bulk_msg(ts, measurements, out, **tags)
+        msg = msg_fn(ts, measurements, out, **tags)
         yield ts, msg
         ts += delta
 
@@ -47,7 +47,9 @@ def generate_rr(iters):
         yield it.next()
         ix += 1
 
-def main(idrange, timerange):
+def main(idrange, timerange, out_format, seed):
+
+    random.seed(seed)
 
     begin, end, delta = timerange
     idbegin, idend = idrange
@@ -81,7 +83,8 @@ def main(idrange, timerange):
             tagline[k] = random.choice(v)
         tags.append(tagline)
 
-    lambdas = [generate_rows(begin, delta, measurements, types, **t) for t in tags]
+    fn = bulk_msg if out_format == 'RESP' else open_tsdb_msg
+    lambdas = [generate_rows(begin, delta, measurements, types, fn, **t) for t in tags]
 
     for ts, msg in generate_rr(lambdas):
         if ts > end:
@@ -96,7 +99,9 @@ if __name__ == '__main__':
     parser.add_argument('--tbegin', required=True, help='begining of the time range')
     parser.add_argument('--tend',   required=True, help='end of the time range')
     parser.add_argument('--tdelta', required=True, help='time step')
+    parser.add_argument('--format', required=True, help='format - RESP or OpenTSDB')
+    parser.add_argument('--seed',   required=False, help='custom seed', default=None)
 
     args = parser.parse_args()
 
-    main((int(args.rbegin), int(args.rend)), (parse_timestamp(args.tbegin), parse_timestamp(args.tend), parse_timedelta(args.tdelta)))
+    main((int(args.rbegin), int(args.rend)), (parse_timestamp(args.tbegin), parse_timestamp(args.tend), parse_timedelta(args.tdelta)), args.format, args.seed)
