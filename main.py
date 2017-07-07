@@ -40,7 +40,7 @@ def open_tsdb_msg(ts, measurements, values, **tags):
         lines.append(line)
     return '\n'.join(lines) + '\n'
 
-def generate_rows(ts, delta, measurements, types, **tags):
+def generate_rows(ts, delta, measurements, types, msg_fn, **tags):
     row = [10.0] * len(measurements)
     out = list(row)
 
@@ -49,7 +49,6 @@ def generate_rows(ts, delta, measurements, types, **tags):
             row[i] += random.gauss(0.0, 0.01)
             out[i] = row[i] if types[i] == 0 else int(row[i])
         msg = msg_fn(ts, measurements, out, **tags)
-        msg = open_tsdb_msg(ts, measurements, out, **tags)
         yield ts, msg
         ts += delta
 
