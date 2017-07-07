@@ -16,18 +16,21 @@ def parse_timedelta(delta):
     t = datetime.datetime.strptime(delta,"%H:%M:%S")
     return datetime.timedelta(hours=t.hour, minutes=t.minute, seconds=t.second)
 
-def bulk_msg(ts, measurements, values, **tags):
+def bulk_msg(ts, measurements, types, values, *tags):
     ncol = len(measurements)
     metric = "|".join(measurements)
-    sname = "+" + metric + ' ' + ' '.join(['{0}={1}'.format(key, val) for key, val in tags.iteritems()])
-    timestr = ts.strftime('+%Y%m%dT%H%M%S.%f')
+    sname = "+" + metric + ' ' + ' '.join(['{0}={1}'.format(key, val) for key, val in tags])
+    timestr = ts.strftime('+%Y%m%dT%H%M%S.000000000')
     header = "*{0}".format(ncol)
     lines = [sname, timestr, header]
-    for val in values:
-        lines.append("+{0}".format(val))
+    for i, val in enumerate(values):
+        if types[i] == 0:
+            lines.append("+{:.17}".format(val))
+        else:
+            lines.append("+{0}".format(val))
     return '\r\n'.join(lines) + '\r\n'
 
-def open_tsdb_msg(ts, measurements, values, **tags):
+def open_tsdb_msg(ts, measurements, types, values, *tags):
     ncol = len(measurements)
     lines = []
     for i in range(0, ncol):
@@ -35,12 +38,15 @@ def open_tsdb_msg(ts, measurements, values, **tags):
         line = "put "
         line += metric
         line += ts.strftime(' %s ')
-        line += "{0} ".format(values[i])
-        line += ' '.join(['{0}={1}'.format(key, val) for key, val in tags.iteritems()])
+        if types[i] == 0:
+            line += "{:.17} ".format(values[i])
+        else:
+            line += "{0} ".format(values[i])
+        line += ' '.join(['{0}={1}'.format(key, val) for key, val in tags])
         lines.append(line)
     return '\n'.join(lines) + '\n'
 
-def generate_rows(ts, delta, measurements, types, msg_fn, **tags):
+def generate_rows(ts, delta, measurements, types, msg_fn, *tags):
     row = [10.0] * len(measurements)
     out = list(row)
 
@@ -48,7 +54,7 @@ def generate_rows(ts, delta, measurements, types, msg_fn, **tags):
         for i in xrange(0, len(measurements)):
             row[i] += random.gauss(0.0, 0.01)
             out[i] = row[i] if types[i] == 0 else int(row[i])
-        msg = msg_fn(ts, measurements, out, **tags)
+        msg = msg_fn(ts, measurements, types, out, *tags)
         yield ts, msg
         ts += delta
 
@@ -91,13 +97,14 @@ def main(idrange, timerange, out_format, seed):
 
     tags = []
     for host in list_hosts:
-        tagline = {'host': host}
+        tagline = [('host', host)]
         for k, v in tag_combinations.iteritems():
-            tagline[k] = random.choice(v)
+            tagline.append((k, random.choice(v)))
+        tagline.sort()
         tags.append(tagline)
 
     fn = bulk_msg if out_format == 'RESP' else open_tsdb_msg
-    lambdas = [generate_rows(begin, delta, measurements, types, fn, **t) for t in tags]
+    lambdas = [generate_rows(begin, delta, measurements, types, fn, *t) for t in tags]
 
     for ts, msg in generate_rr(lambdas):
         if ts > end:
