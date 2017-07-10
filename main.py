@@ -37,7 +37,7 @@ def open_tsdb_msg(ts, measurements, types, values, *tags):
         metric = measurements[i]
         line = "put "
         line += metric
-        line += ts.strftime(' %s ')
+        line += " {0} ".format((ts - datetime.datetime(1970, 1, 1)).total_seconds())
         if types[i] == 0:
             line += "{:.17} ".format(values[i])
         else:
