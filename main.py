@@ -10,7 +10,7 @@ def bulk_msg(measurements, types, values, *tags):
     ncol = len(measurements)
     metrics = []
     for metric in measurements:
-        sname = "+" + metric + ' ' + ' '.join(['{0}={1}'.format(key, val) for key, val in tags])
+        sname = metric + ' ' + ' '.join(['{0}={1}'.format(key, val) for key, val in tags])
         metrics.append(sname)
     return "\n".join(metrics) + "\n"
 
@@ -67,7 +67,7 @@ def main(seed):
     fn = bulk_msg
     lambdas = [generate_rows(measurements, types, fn, *t) for t in tags]
 
-    limit = 10000000
+    limit = 1000000
     for ix, msg in enumerate(generate_rr(lambdas)):
         if ix > limit:
             break
