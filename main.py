@@ -54,7 +54,7 @@ def main(seed):
         'rack': range(1, 100),
     }
 
-    list_hosts = ["192.168.{0}.{1}".format(*m) for m in product(range (0, 255), range(0, 255))]
+    list_hosts = ["192.{2}.{0}.{1}".format(*m) for m in product(range (0, 256), range(0, 256), range(168, 170))]
 
     tags = []
     for host in list_hosts:
